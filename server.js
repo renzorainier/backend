@@ -1,26 +1,35 @@
 // server.js
 const { WebcastPushConnection } = require('tiktok-live-connector');
 const { Server } = require('socket.io');
+const http = require('http'); // <-- ADDED
 
-// 1. Setup WebSocket Server dynamically for Render
-const PORT = process.env.PORT || 4000;
-const io = new Server(PORT, {
+// 1. Create a basic HTTP server (Helps Render route traffic and pass health checks)
+const server = http.createServer((req, res) => {
+    if (req.method === 'GET' && req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('TikTok Live Backend is Running!\n');
+    }
+});
+
+// 2. Attach Socket.io to the HTTP server with explicit CORS
+const io = new Server(server, {
   cors: {
-    origin: "*", // Allow your Vercel app to connect
+    origin: "*", // Allows any frontend to connect
     methods: ["GET", "POST"]
   }
 });
 
-console.log(`WebSocket server running on port ${PORT}`);
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+});
 
-// 2. Change this to the TikTok username you want to track
+// 3. Setup TikTok Connection
 const tiktokUsername = "renz.rainier";
-
 const tiktokLiveConnection = new WebcastPushConnection(tiktokUsername);
 
 console.log(`Connecting to TikTok Live: @${tiktokUsername}...`);
 
-// 3. Connect to TikTok
 tiktokLiveConnection.connect().then(state => {
     console.info(`Connected to roomId ${state.roomId}`);
 }).catch(err => {
@@ -42,7 +51,6 @@ tiktokLiveConnection.on('chat', (data) => {
     });
 });
 
-// (Optional) Handle stream ending
 tiktokLiveConnection.on('streamEnd', () => {
     console.warn("Stream ended.");
 });
