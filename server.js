@@ -25,7 +25,7 @@ server.listen(PORT, () => {
 });
 
 // 3. Setup TikTok Connection
-const tiktokUsername = "renz.rainier";
+const tiktokUsername = "_papanan";
 const tiktokLiveConnection = new WebcastPushConnection(tiktokUsername);
 
 console.log(`Connecting to TikTok Live: @${tiktokUsername}...`);
